@@ -1,11 +1,10 @@
 ﻿# tworzenie interfejsu
-cls
+Clear-Host
 
 $DebugPreference = "Continue"
 
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
-[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Net.Mail")
 
 $button_width = 80
 $button_height = 70
@@ -70,24 +69,6 @@ function CreateRowGrid {
     }
     return $table
 }
-
-function CreateLabel {
-    param
-    (
-        [string]$text
-    )
-	
-    # tworzy etykiete z $text
-	
-    $label = New-Object System.Windows.Forms.Label
-    $label.Text = $text
-    $label.AutoSize = $True
-    $label.Dock = "Fill"
-    $label.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
-		
-    return $label
-}
-
 # fukcje operacyjne
 
 # oper[0] - pierwszy argument, oper[1] - drugi argument, oper[2] - typ operacji
@@ -96,8 +77,10 @@ $oper = @($null, $null, $null)
 
 
 function clearE {
-    if ($oper[0] -eq $null)
-    { return 0 }
+    Write-Debug 'Clearing entry'
+    if ($oper[0] -eq $null) {
+        $disp.Text = "0"
+    }
     else
     { $oper[1] = $null }
     $disp.Text = "0"
@@ -192,6 +175,38 @@ function substract {
     Write-Debug "substraction ready"
 }
 
+function sine {
+    $oper[0] = [double] $disp.Text
+    Write-Debug "executing sine"
+    $disp.Text = [string][math]::Sin($oper[0])
+    clearC $False
+}
+
+function cosine {
+    $oper[0] = [double] $disp.Text
+    Write-Debug "executing cosine"
+    $disp.Text = [string][math]::Cos($oper[0])
+    clearC $False
+}
+
+function tangent {
+    $oper[0] = [double] $disp.Text
+    Write-Debug "executing tangent"
+    $disp.Text = [string][math]::Tan($oper[0])
+    clearC $False
+}
+
+function cotangent {
+    $oper[0] = [double] $disp.Text
+    Write-Debug "executing contangent"
+    if ($oper[0] -eq 0)
+    { [System.Windows.Forms.MessageBox]::Show('Dla tego argumentu nie można obliczyć funkcji!') }
+    else {
+        $disp.Text = [string]1 / [math]::Tan($oper[0])
+        clearC $False
+    } 
+}
+
 function execute {
     Write-Debug "executing"
     if ($oper[2] -ne $null) {
@@ -201,7 +216,7 @@ function execute {
             "/" {
                 Write-Debug "executing division"
                 if ($oper[1] -eq 0) {
-                    [System.Windows.MessageBox]::Show('Nie dziel przez zero!')
+                    [System.Windows.Forms.MessageBox]::Show('Nie dziel przez zero!')
                 }
                 else {
                     $disp.Text = [string]($oper[0] / $oper[1])
@@ -229,9 +244,8 @@ function execute {
         }
     }
     else { 
-        [System.Windows.MessageBox]::Show('Najpierw wybierz operację!')
+        [System.Windows.Forms.MessageBox]::Show('Najpierw wybierz operację!')
     }
-    #$disp.Text = [string]$disp.Text.Replace(".",",")
     clearC $False
 }
 
@@ -239,7 +253,7 @@ function execute {
 # Main Form
 $objForm = New-Object System.Windows.Forms.Form 
 $objForm.Text = "Kalkulator"
-$objForm.Size = New-Object System.Drawing.Size(400, 520) 
+$objForm.Size = New-Object System.Drawing.Size(400, 570) 
 $objForm.Opacity = 1
 $objForm.BackColor = "white"
 $objForm.KeyPreview = $True
@@ -247,36 +261,11 @@ $objForm.MaximizeBox = $False
 $objForm.Add_KeyDown( { if ($_.KeyCode -eq "Escape") 
         { $objForm.Close() } })
 
-
-
-# ROW 0
-# dodajemy wiesze do mainGrid
-$rs = New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Percent, 100)
-#$dummy = $mainGrid.RowStyles.Add($rs)
-# ROW 1
-$rs = New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Percent, 100)
-#$dummy = $mainGrid.RowStyles.Add($rs)
-# ROW 2
-$rs = New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Percent, 100)
-#$dummy = $mainGrid.RowStyles.Add($rs)
-# ROW 3
-$rs = New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Percent, 100)
-#$dummy = $mainGrid.RowStyles.Add($rs)
-# ROW 4
-$rs = New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Percent, 100)
-$dummy = $mainGrid.RowStyles.Add($rs)
-## ROW 5
-$rs = New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Percent, 100)
-#$dummy = $mainGrid.RowStyles.Add($rs)
-# ROW 6
-$rs = New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::Percent, 100)
-#$dummy = $mainGrid.RowStyles.Add($rs)
-
 $mainGrid = New-Object System.Windows.Forms.TableLayoutPanel
 $mainGrid.Dock = "Fill"
 $mainGrid.AutoSize = $True
 $mainGrid.AutoSizeMode = [System.Windows.Forms.AutoSizeMode]::GrowAndShrink
-$mainGrid.RowCount = 6
+$mainGrid.RowCount = 7
 $mainGrid.ColumnCount = 1
 $mainGrid.Margin = 0
 $objForm.Controls.Add($mainGrid)
@@ -391,17 +380,33 @@ $r2.Controls.Add($b53, 3, 4)
 # ROW 6 - 	
 $r6 = CreateRowGrid 4
 $mainGrid.Controls.Add($r6, 0, 1)
-$b60 = CreateButton "def" { changeSign } "±" "zmiana znaku"
+$b60 = CreateButton "def" { sine } "sin" "sinus"
 $r2.Controls.Add($b60, 0, 5)
 
-$b61 = CreateButton "def" { addDisp 0 } "0" "0"
+$b61 = CreateButton "def" { cosine } "cos" "cosinus"
 $r2.Controls.Add($b61, 1, 5)
 
-$b62 = CreateButton "def" { addDisp "." } "." "."
+$b62 = CreateButton "def" { tangent } "tan" "tangens"
 $r2.Controls.Add($b62, 2, 5)
 
-$b63 = CreateButton "def" { execute } "=" "wykonaj"
+$b63 = CreateButton "def" { cotangent } "ctg" "kotangens"
 $r2.Controls.Add($b63, 3, 5)
+
+# ROW 7 -
+$r7 = CreateRowGrid 4
+$mainGrid.Controls.Add($r6, 0, 1)
+$b70 = CreateButton "def" { changeSign } "±" "zmiana znaku"
+$r2.Controls.Add($b70, 0, 6)
+
+$b71 = CreateButton "def" { addDisp 0 } "0" "0"
+$r2.Controls.Add($b71, 1, 6)
+
+$b72 = CreateButton "def" { addDisp "." } "." "."
+$r2.Controls.Add($b72, 2, 6)
+
+$b73 = CreateButton "def" { execute } "=" "wykonaj"
+$r2.Controls.Add($b73, 3, 6)
+
 	
 # pokaz formularz
 
